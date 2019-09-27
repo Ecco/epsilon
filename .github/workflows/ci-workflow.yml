@@ -5,6 +5,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+      - run: wget http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20190524.exe
+      - run: wget https://raw.githubusercontent.com/msys2/msys2-installer/master/auto-install.js
+      - run: msys2-x86_64-20190524.exe --platform minimal --script auto-install.js -v
       - uses: actions/checkout@v1
       - run: make PLATFORM=simulator
         shell: bash
@@ -18,5 +21,6 @@ jobs:
     runs-on: macOS-latest
     steps:
       - run: brew install numworks/tap/numworks-sdk
+      - run: brew install fltk
       - uses: actions/checkout@v1
       - run: make PLATFORM=simulator
