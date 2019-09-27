@@ -7,4 +7,5 @@ jobs:
     steps:
       - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
+      - run: msys2.exe --help
       - run: make PLATFORM=emscripten
