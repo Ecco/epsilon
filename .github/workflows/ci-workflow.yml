@@ -6,6 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - run: make PLATFORM=simulator
   build-macos:
     runs-on: macOS-latest
     steps:
