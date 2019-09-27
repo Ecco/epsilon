@@ -6,4 +6,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: ecco/setup-emscripten@master
-      - run: source emsdk/emsdk_env.sh && make PLATFORM=emscripten
+      - uses: actions/checkout@v1
+      - run: source emsdk_env.sh && make PLATFORM=emscripten
