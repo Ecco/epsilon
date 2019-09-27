@@ -11,10 +11,12 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt-get install libfltk1.3-dev
       - uses: actions/checkout@v1
       - run: make PLATFORM=simulator
   build-macos:
     runs-on: macOS-latest
     steps:
+      - run: brew install numworks/tap/numworks-sdk
       - uses: actions/checkout@v1
       - run: make PLATFORM=simulator
