@@ -5,9 +5,7 @@ jobs:
   build-emscripten:
     runs-on: ubuntu-latest
     steps:
-      - run: git clone https://github.com/emscripten-core/emsdk.git
-      - run: emsdk/emsdk install latest
-      - run: emsdk/emsdk activate latest
+      - uses: ecco/setup-emscripten@master
       - run: source emsdk/emsdk_env.sh && make PLATFORM=emscripten
   build-windows:
     runs-on: windows-latest
