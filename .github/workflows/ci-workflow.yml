@@ -18,7 +18,8 @@ jobs:
     steps:
       - uses: ecco/setup-emscripten@master
       - uses: actions/checkout@v1
-      - run: source emsdk/emsdk_env.sh && make -j2 PLATFORM=simulator TARGET=web
+      - run: env
+      - run: source $EMSDK/emsdk_env.sh && make -j2 PLATFORM=simulator TARGET=web
       - uses: actions/upload-artifact@master
         with:
           name: epsilon-web.zip
@@ -34,7 +35,7 @@ jobs:
     steps:
       - run: brew install numworks/tap/numworks-sdk
       - uses: actions/checkout@v1
-      - run: make PLATFORM=simulator TARGET=ios
+      - run: make PLATFORM=simulator TARGET=ios GOOGLE_ANALYTICS=0
       - uses: actions/upload-artifact@master
         with:
           name: epsilon-ios.zip
