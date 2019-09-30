@@ -2,7 +2,7 @@ name: Continuous integration
 on: [push]
 
 jobs:
-  build-msys2:
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: ecco/setup-msys2@master
@@ -11,9 +11,9 @@ jobs:
       - run: msys2do make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-win64.exe
+          name: epsilon-windows.exe
           path: output/release/simulator/windows/epsilon.exe
-  build-emscripten:
+  build-web:
     runs-on: ubuntu-latest
     steps:
       - uses: ecco/setup-emscripten@master
