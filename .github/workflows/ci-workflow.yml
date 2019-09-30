@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: epsilon-macos.zip
-          path: output/release/simulator/ios/app/epsilon.ipa
+          path: output/release/simulator/macos/app/Payload/Epsilon.app
   build-ios:
     runs-on: macOS-latest
     steps:
