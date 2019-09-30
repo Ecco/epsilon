@@ -2,12 +2,16 @@ name: Continuous integration
 on: [push]
 
 jobs:
-  build-android:
+  build-simulator-android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - run: make -j2 PLATFORM=simulator TARGET=android
-  build-n0100:
+      - uses: actions/upload-artifact@master
+        with:
+          name: epsilon-simulator-android.apk
+          path: output/release/simulator/android/app/outputs/apk/release/android-release-unsigned.apk
+  build-device-n0100:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
@@ -15,9 +19,9 @@ jobs:
       - run: make -j2 MODEL=n0100 epsilon.dfu
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-n0100.zip
+          name: epsilon-device-n0100.dfu
           path: output/release/device/n0100/epsilon.dfu
-  build-n0110:
+  build-device-n0110:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
@@ -25,9 +29,9 @@ jobs:
       - run: make -j2 epsilon.dfu
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-n0110.zip
+          name: epsilon-device-n0110.dfu
           path: output/release/device/n0110/epsilon.dfu
-  build-windows:
+  build-simulator-windows:
     runs-on: windows-latest
     steps:
       - uses: ecco/setup-msys2@master
@@ -36,9 +40,9 @@ jobs:
       - run: msys2do make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-windows.exe
+          name: epsilon-simulator-windows.exe
           path: output/release/simulator/windows/epsilon.exe
-  build-web:
+  build-simulator-web:
     runs-on: ubuntu-latest
     steps:
       - uses: ecco/setup-emscripten@master
@@ -46,9 +50,9 @@ jobs:
       - run: source $EMSDK/emsdk_env.sh && make -j2 PLATFORM=simulator TARGET=web
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-web.zip
+          name: epsilon-simulator-web.zip
           path: output/release/simulator/web/simulator.zip
-  build-linux:
+  build-simulator-linux:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
@@ -56,9 +60,9 @@ jobs:
       - run: make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-linux.zip
+          name: epsilon-simulator-linux.bin
           path: output/release/simulator/linux/epsilon.bin
-  build-macos:
+  build-simulator-macos:
     runs-on: macOS-latest
     steps:
       - run: brew install numworks/tap/numworks-sdk
@@ -66,9 +70,9 @@ jobs:
       - run: make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-macos.zip
+          name: epsilon-simulator-macos.zip
           path: output/release/simulator/macos/app/Payload
-  build-ios:
+  build-simulator-ios:
     runs-on: macOS-latest
     steps:
       - run: brew install numworks/tap/numworks-sdk
@@ -76,5 +80,5 @@ jobs:
       - run: make -j2 PLATFORM=simulator TARGET=ios GOOGLE_ANALYTICS=0
       - uses: actions/upload-artifact@master
         with:
-          name: epsilon-ios.zip
+          name: epsilon-simulator-ios.ipa
           path: output/release/simulator/ios/app/epsilon.ipa
