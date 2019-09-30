@@ -2,6 +2,11 @@ name: Continuous integration
 on: [push]
 
 jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: make -j2 PLATFORM=simulator TARGET=android
   build-n0100:
     runs-on: ubuntu-latest
     steps:
