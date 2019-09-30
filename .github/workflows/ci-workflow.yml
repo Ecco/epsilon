@@ -5,8 +5,8 @@ jobs:
   build-msys2:
     runs-on: windows-latest
     steps:
-      - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
+      - run: env
       - run: which bash
       - run: which env
       - run: bash -l -i -c "env"
