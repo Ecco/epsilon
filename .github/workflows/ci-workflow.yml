@@ -29,13 +29,17 @@ jobs:
     steps:
       - run: brew install numworks/tap/numworks-sdk
       - uses: actions/checkout@v1
-      - run: make PLATFORM=simulator
+      - run: make -j2 PLATFORM=simulator
+      - uses: actions/upload-artifact@master
+        with:
+          name: epsilon-macos.zip
+          path: output/release/simulator/ios/app/epsilon.ipa
   build-ios:
     runs-on: macOS-latest
     steps:
       - run: brew install numworks/tap/numworks-sdk
       - uses: actions/checkout@v1
-      - run: make PLATFORM=simulator TARGET=ios GOOGLE_ANALYTICS=0
+      - run: make -j2 PLATFORM=simulator TARGET=ios GOOGLE_ANALYTICS=0
       - uses: actions/upload-artifact@master
         with:
           name: epsilon-ios.zip
