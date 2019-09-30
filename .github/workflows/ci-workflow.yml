@@ -9,7 +9,5 @@ jobs:
       - uses: actions/checkout@v1
       - run: dir
       - run: bash -l -c "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-fltk git make bison mingw-w64-x86_64-python2"
-      - run: bash -l -c "pwd"
-      - run: bash -l -c "ls -la"
       - run: bash -l -c "env"
-      - run: bash -l -c "make PLATFORM=emscripten"
+      - run: bash -l -c "cd $OLDPWD && make PLATFORM=emscripten"
