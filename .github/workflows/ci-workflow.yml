@@ -18,7 +18,6 @@ jobs:
     steps:
       - uses: ecco/setup-emscripten@master
       - uses: actions/checkout@v1
-      - run: env
       - run: source $EMSDK/emsdk_env.sh && make -j2 PLATFORM=simulator TARGET=web
       - uses: actions/upload-artifact@master
         with:
