@@ -8,10 +8,6 @@ jobs:
       - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
       - run: set
-      - run: 'D:\a\_temp\plifplafplouf\msys2do.cmd uname'
-      - run: msys2do uname
-      - run: 'dir D:'
-      - run: 'dir D:\a\_temp'
-      - run: 'dir D:\a\_temp\plifplafplouf'
+      - run: msys2do env
       - run: msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng
       - run: msys2do make PLATFORM=simulator
