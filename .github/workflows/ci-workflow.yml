@@ -22,3 +22,19 @@ jobs:
         with:
           name: epsilon-web.zip
           path: output/release/simulator/web/simulator.zip
+  build-macos:
+    runs-on: macOS-latest
+    steps:
+      - run: brew install numworks/tap/numworks-sdk
+      - uses: actions/checkout@v1
+      - run: make PLATFORM=simulator
+  build-ios:
+    runs-on: macOS-latest
+    steps:
+      - run: brew install numworks/tap/numworks-sdk
+      - uses: actions/checkout@v1
+      - run: make PLATFORM=simulator TARGET=ios
+      - uses: actions/upload-artifact@master
+        with:
+          name: epsilon-ios.zip
+          path: output/release/simulator/ios/app/epsilon.ipa
