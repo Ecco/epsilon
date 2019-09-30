@@ -5,7 +5,7 @@ jobs:
   build-n0100:
     runs-on: ubuntu-latest
     steps:
-      - run: apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
+      - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
       - run: make -j2 MODEL=n0100 epsilon.dfu
       - uses: actions/upload-artifact@master
@@ -15,7 +15,7 @@ jobs:
   build-n0110:
     runs-on: ubuntu-latest
     steps:
-      - run: apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
+      - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
       - run: make -j2 epsilon.dfu
       - uses: actions/upload-artifact@master
@@ -46,7 +46,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - run: apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
+      - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
       - run: make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
