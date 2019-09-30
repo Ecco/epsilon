@@ -1,5 +1,6 @@
 #include "values_controller.h"
 #include <assert.h>
+#include "../../shared/poincare_helpers.h"
 #include "../../constant.h"
 #include "../app.h"
 
@@ -10,6 +11,7 @@ namespace Graph {
 
 ValuesController::ValuesController(Responder * parentResponder, InputEventHandlerDelegate * inputEventHandlerDelegate, ButtonRowController * header) :
   Shared::ValuesController(parentResponder, header),
+  m_selectableTableView(this),
   m_functionTitleCells{},
   m_floatCells{},
   m_abscissaTitleCells{},
@@ -37,8 +39,37 @@ ValuesController::ValuesController(Responder * parentResponder, InputEventHandle
     m_functionTitleCells[i].setOrientation(FunctionTitleCell::Orientation::HorizontalIndicator);
     m_functionTitleCells[i].setFont(KDFont::SmallFont);
   }
-  setupAbscissaCellsAndTitleCells(inputEventHandlerDelegate);
+  setupSelectableTableViewAndCells(inputEventHandlerDelegate);
   m_selectableTableView.setDelegate(this);
+}
+
+KDCoordinate ValuesController::columnWidth(int i) {
+  ContinuousFunction::PlotType plotType = plotTypeAtColumn(&i);
+  if (i == 0) {
+    return k_abscissaCellWidth;
+  }
+  if (i > 0 && plotType == ContinuousFunction::PlotType::Parametric) {
+    return k_parametricCellWidth;
+  }
+  return k_cellWidth;
+}
+
+KDCoordinate ValuesController::cumulatedWidthFromIndex(int i) {
+  return TableViewDataSource::cumulatedWidthFromIndex(i);
+}
+
+int ValuesController::indexFromCumulatedWidth(KDCoordinate offsetX) {
+  return TableViewDataSource::indexFromCumulatedWidth(offsetX);
+}
+
+Shared::Hideable * ValuesController::hideableCellFromType(HighlightCell * cell, int type) {
+  if (type == k_notEditableValueCellType) {
+    Shared::HideableEvenOddBufferTextCell * myCell = static_cast<Shared::HideableEvenOddBufferTextCell *>(cell);
+    return static_cast<Shared::Hideable *>(myCell);
+  }
+  assert(type == k_editableValueCellType);
+  Shared::StoreCell * myCell = static_cast<Shared::StoreCell *>(cell);
+  return static_cast<Shared::Hideable *>(myCell);
 }
 
 void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, int j) {
@@ -51,38 +82,27 @@ void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, in
 
   const int numberOfElementsInCol = numberOfElementsInColumn(i);
   if (j > numberOfElementsInCol + 1) {
-    if (typeAtLoc == k_notEditableValueCellType) {
-      Shared::HideableEvenOddBufferTextCell * myCell = static_cast<Shared::HideableEvenOddBufferTextCell *>(cell);
-      myCell->setHide(true);
-      myCell->setText("");
-    } else if (typeAtLoc == k_editableValueCellType) {
-      StoreCell * myCell = static_cast<StoreCell *>(cell);
-      myCell->editableTextCell()->textField()->setText("");
-      myCell->setHide(true);
+    if (typeAtLoc == k_notEditableValueCellType || typeAtLoc == k_editableValueCellType) {
+      Shared::Hideable * hideableCell = hideableCellFromType(cell, typeAtLoc);
+      hideableCell->setHide(true);
+      hideableCell->reinit();
     }
     return;
   } else {
-    if (typeAtLoc == k_notEditableValueCellType) {
-      Shared::Hideable * myCell = static_cast<Shared::Hideable *>(static_cast<Shared::HideableEvenOddBufferTextCell *>(cell));
-      myCell->setHide(false);
-    } else if (typeAtLoc == k_editableValueCellType) {
-      StoreCell * myCell = static_cast<StoreCell *>(cell);
-      myCell->setHide(false);
+    if (typeAtLoc == k_notEditableValueCellType || typeAtLoc == k_editableValueCellType) {
+      hideableCellFromType(cell, typeAtLoc)->setHide(false);
     }
   }
   if (j == numberOfElementsInCol+1) {
     static_cast<EvenOddCell *>(cell)->setEven(j%2 == 0);
-    if (typeAtLoc == k_notEditableValueCellType) {
-      Shared::HideableEvenOddBufferTextCell * myCell = static_cast<Shared::HideableEvenOddBufferTextCell *>(cell);
-      myCell->setText("");
-    } else if (typeAtLoc == k_editableValueCellType) {
-      StoreCell * myCell = static_cast<StoreCell *>(cell);
-      myCell->editableTextCell()->textField()->setText("");
+    if (typeAtLoc == k_notEditableValueCellType || typeAtLoc == k_editableValueCellType) {
+      hideableCellFromType(cell, typeAtLoc)->reinit();
     }
     return;
   }
 
   Shared::ValuesController::willDisplayCellAtLocation(cell, i, j);
+
   if (typeAtLoc == k_abscissaTitleCellType) {
     AbscissaTitleCell * myTitleCell = (AbscissaTitleCell *)cell;
     myTitleCell->setMessage(valuesParameterMessageAtColumn(i));
@@ -96,28 +116,11 @@ void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, in
     bool isDerivative = false;
     Ion::Storage::Record record = recordAtColumn(i, &isDerivative);
     Shared::ExpiringPointer<ContinuousFunction> function = functionStore()->modelForRecord(record);
-    if (function->plotType() == ContinuousFunction::PlotType::Parametric) {
-      bool isX = false;
-      if (i+1 < numberOfColumns() && typeAtLocation(i+1,j) == k_functionTitleCellType) {
-        isX = recordAtColumn(i+1) == record;
-        function = functionStore()->modelForRecord(record); // To pass Expiring pointer assertions
-      }
-      if (isX) {
-        // This is the parametric function x column title
-        function->name(bufferName, bufferNameSize);
-        myFunctionCell->setHorizontalAlignment(1.0f);
-      } else {
-        // This is the parametric function y column title
-        myFunctionCell->setHorizontalAlignment(0.0f);
-        strlcpy(bufferName, "(t)", bufferNameSize);
-      }
+    myFunctionCell->setHorizontalAlignment(0.5f);
+    if (isDerivative) {
+      function->derivativeNameWithArgument(bufferName, bufferNameSize);
     } else {
-      myFunctionCell->setHorizontalAlignment(0.5f);
-      if (isDerivative) {
-        function->derivativeNameWithArgument(bufferName, bufferNameSize);
-      } else {
-        function->nameWithArgument(bufferName, bufferNameSize);
-      }
+      function->nameWithArgument(bufferName, bufferNameSize);
     }
     myFunctionCell->setText(bufferName);
     myFunctionCell->setColor(function->color());
@@ -138,6 +141,9 @@ I18n::Message ValuesController::emptyMessage() {
 }
 
 void ValuesController::tableViewDidChangeSelection(SelectableTableView * t, int previousSelectedCellX, int previousSelectedCellY, bool withinTemporarySelection) {
+  if (withinTemporarySelection) {
+    return;
+  }
   const int i = selectedColumn();
   const int j = selectedRow();
   const int numberOfElementsInCol = numberOfElementsInColumn(i);
@@ -173,8 +179,7 @@ int ValuesController::numberOfColumnsForRecord(Ion::Storage::Record record) cons
   ExpiringPointer<ContinuousFunction> f = functionStore()->modelForRecord(record);
   ContinuousFunction::PlotType plotType = f->plotType();
   return 1 +
-    (plotType == ContinuousFunction::PlotType::Cartesian && f->displayDerivative()) +
-    (plotType == ContinuousFunction::PlotType::Parametric);
+    (plotType == ContinuousFunction::PlotType::Cartesian && f->displayDerivative());
 }
 
 Shared::Interval * ValuesController::intervalAtColumn(int columnIndex) {
@@ -226,23 +231,37 @@ ViewController * ValuesController::functionParameterController() {
   return &m_functionParameterController;
 }
 
-double ValuesController::evaluationOfAbscissaAtColumn(double abscissa, int columnIndex) {
+void ValuesController::printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) {
   bool isDerivative = false;
+  double evaluationX = NAN;
+  double evaluationY = NAN;
   Ion::Storage::Record record = recordAtColumn(columnIndex, &isDerivative);
   Shared::ExpiringPointer<ContinuousFunction> function = functionStore()->modelForRecord(record);
   Poincare::Context * context = textFieldDelegateApp()->localContext();
+  bool isParametric = function->plotType() == ContinuousFunction::PlotType::Parametric;
   if (isDerivative) {
-    return function->approximateDerivative(abscissa, context);
+    evaluationY = function->approximateDerivative(abscissa, context);
+  } else {
+    Poincare::Coordinate2D<double> eval = function->evaluate2DAtParameter(abscissa, context);
+    evaluationY = eval.x2();
+    if (isParametric) {
+      evaluationX = eval.x1();
+    }
   }
-  Poincare::Coordinate2D<double> eval = function->evaluate2DAtParameter(abscissa, context);
-  if (function->plotType() != ContinuousFunction::PlotType::Parametric
-      || (columnIndex == numberOfColumns() - 1
-        || !((typeAtLocation(columnIndex+1, 0) == k_functionTitleCellType)
-          && recordAtColumn(columnIndex+1) == record)))
-  {
-    return eval.x2();
+  int numberOfChar = 0;
+  if (isParametric) {
+    assert(numberOfChar < bufferSize-1);
+    buffer[numberOfChar++] = '(';
+    numberOfChar += PoincareHelpers::ConvertFloatToText<double>(evaluationX, buffer+numberOfChar, bufferSize - numberOfChar, Preferences::LargeNumberOfSignificantDigits);
+    assert(numberOfChar < bufferSize-1);
+    buffer[numberOfChar++] = ';';
   }
-  return eval.x1();
+  numberOfChar += PoincareHelpers::ConvertFloatToText<double>(evaluationY, buffer+numberOfChar, bufferSize - numberOfChar, Preferences::LargeNumberOfSignificantDigits);
+  if (isParametric) {
+    assert(numberOfChar+1 < bufferSize-1);
+    buffer[numberOfChar++] = ')';
+    buffer[numberOfChar] = 0;
+  }
 }
 
 void ValuesController::setStartEndMessages(Shared::IntervalParameterController * controller, int column) {
@@ -262,9 +281,48 @@ void ValuesController::updateNumberOfColumns() const {
   }
   m_numberOfColumns = 0;
   for (int plotTypeIndex = 0; plotTypeIndex < ContinuousFunction::k_numberOfPlotTypes; plotTypeIndex++) {
+    // Count abscissa column if the sub table does exist
     m_numberOfColumnsForType[plotTypeIndex] += (m_numberOfColumnsForType[plotTypeIndex] > 0);
     m_numberOfColumns += m_numberOfColumnsForType[plotTypeIndex];
   }
+}
+
+int writeMatrixBrakets(char * buffer, const int bufferSize, int type) {
+  /* Write the double brackets required in matrix notation.
+   * - type == 1: "[["
+   * - type == 0: "]["
+   * - type == -1: "]]"
+   */
+  int currentChar = 0;
+  assert(currentChar < bufferSize-1);
+  buffer[currentChar++] = type < 0 ? '[' : ']';
+  assert(currentChar < bufferSize-1);
+  buffer[currentChar++] = type <= 0 ? '[' : ']';
+  return currentChar;
+}
+
+bool ValuesController::ValuesSelectableTableView::handleEvent(Ion::Events::Event event) {
+  bool handledEvent = SelectableTableView::handleEvent(event);
+  if (handledEvent && (event == Ion::Events::Copy || event == Ion::Events::Cut)) {
+    const char * text = Clipboard::sharedClipboard()->storedText();
+    if (text[0] == '(') {
+      constexpr int bufferSize = 2*PrintFloat::k_maxFloatCharSize + 6; // "[[a][b]]" gives 6 characters in addition to the 2 floats
+      char buffer[bufferSize];
+      int currentChar = 0;
+      currentChar += writeMatrixBrakets(buffer + currentChar, bufferSize - currentChar, -1);
+      assert(currentChar < bufferSize-1);
+      size_t semiColonPosition = UTF8Helper::CopyUntilCodePoint(buffer+currentChar, TextField::maxBufferSize() - currentChar, text+1, ';');
+      currentChar += semiColonPosition;
+      currentChar += writeMatrixBrakets(buffer + currentChar, bufferSize - currentChar, 0);
+      assert(currentChar < bufferSize-1);
+      currentChar += UTF8Helper::CopyUntilCodePoint(buffer+currentChar, TextField::maxBufferSize() - currentChar, text+1+semiColonPosition+1, ')');
+      currentChar += writeMatrixBrakets(buffer + currentChar, bufferSize - currentChar, 1);
+      assert(currentChar < bufferSize-1);
+      buffer[currentChar] = 0;
+      Clipboard::sharedClipboard()->store(buffer);
+    }
+  }
+  return handledEvent;
 }
 
 }

@@ -27,6 +27,7 @@ CalculationController::CalculationController(Responder * parentResponder, Button
   }
   for (int i = 0; i < k_numberOfCalculationTitleCells; i++) {
     m_calculationTitleCells[i].setAlignment(1.0f, 0.5f);
+    m_calculationTitleCells[i].setMessageFont(KDFont::SmallFont);
   }
   for (int i = 0; i < k_numberOfCalculationCells; i++) {
     m_calculationCells[i].setTextColor(Palette::GreyDark);
@@ -87,7 +88,7 @@ void CalculationController::willDisplayCellAtLocation(HighlightCell * cell, int 
       I18n::Message::Sum,
       I18n::Message::SquareSum,
       I18n::Message::SampleStandardDeviationS};
-    MarginEvenOddMessageTextCell * calcTitleCell = static_cast<MarginEvenOddMessageTextCell *>(cell);
+    EvenOddMessageTextCell * calcTitleCell = static_cast<EvenOddMessageTextCell *>(cell);
     calcTitleCell->setMessage(titles[j-1]);
     return;
   }
@@ -99,7 +100,7 @@ void CalculationController::willDisplayCellAtLocation(HighlightCell * cell, int 
   double calculation = (m_store->*calculationMethods[j-1])(seriesIndex);
   EvenOddBufferTextCell * calculationCell = static_cast<EvenOddBufferTextCell *>(cell);
   constexpr int precision = Preferences::LargeNumberOfSignificantDigits;
-  constexpr int bufferSize = PrintFloat::bufferSizeForFloatsWithPrecision(precision);
+  constexpr int bufferSize = PrintFloat::charSizeForFloatsWithPrecision(precision);
   char buffer[bufferSize];
   PoincareHelpers::ConvertFloatToText<double>(calculation, buffer, bufferSize, precision);
   calculationCell->setText(buffer);

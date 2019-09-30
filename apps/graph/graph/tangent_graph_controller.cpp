@@ -1,7 +1,6 @@
 #include "tangent_graph_controller.h"
 #include "../app.h"
 #include "../../apps_container.h"
-#include <ion/unicode/utf8_decoder.h>
 #include "../../shared/poincare_helpers.h"
 #include <poincare/preferences.h>
 
@@ -68,24 +67,24 @@ void TangentGraphController::reloadBannerView() {
   }
   FunctionBannerDelegate::reloadBannerViewForCursorOnFunction(m_cursor, m_record, Shared::FunctionApp::app()->functionStore(), AppsContainer::sharedAppsContainer()->globalContext());
   GraphControllerHelper::reloadDerivativeInBannerViewForCursorOnFunction(m_cursor, m_record);
-  constexpr size_t bufferSize = FunctionBannerDelegate::k_maxNumberOfCharacters + PrintFloat::bufferSizeForFloatsWithPrecision(Preferences::LargeNumberOfSignificantDigits);
+  constexpr size_t bufferSize = FunctionBannerDelegate::k_maxNumberOfCharacters + PrintFloat::charSizeForFloatsWithPrecision(Preferences::LargeNumberOfSignificantDigits);
   char buffer[bufferSize];
   Poincare::Context * context = textFieldDelegateApp()->localContext();
 
   constexpr int precision = Preferences::MediumNumberOfSignificantDigits;
-  int legendLength = strlcpy(buffer, "a", bufferSize);
-  legendLength += UTF8Decoder::CodePointToChars(UCodePointAlmostEqualTo, buffer+legendLength, bufferSize-legendLength);
+  const char * legend = "a=";
+  int legendLength = strlcpy(buffer, legend, bufferSize);
   ExpiringPointer<ContinuousFunction> function = App::app()->functionStore()->modelForRecord(m_record);
   double y = function->approximateDerivative(m_cursor->x(), context);
-  PoincareHelpers::ConvertFloatToText<double>(y, buffer + legendLength, PrintFloat::bufferSizeForFloatsWithPrecision(precision), precision);
+  PoincareHelpers::ConvertFloatToText<double>(y, buffer + legendLength, bufferSize - legendLength, precision);
   m_bannerView->aView()->setText(buffer);
 
-  legendLength = strlcpy(buffer, "b", bufferSize);
-  legendLength += UTF8Decoder::CodePointToChars(UCodePointAlmostEqualTo, buffer+legendLength, bufferSize-legendLength);
+  legend = "b=";
+  legendLength = strlcpy(buffer, legend, bufferSize);
   Shared::TextFieldDelegateApp * myApp = textFieldDelegateApp();
   assert(function->plotType() == Shared::ContinuousFunction::PlotType::Cartesian);
   y = -y*m_cursor->x()+function->evaluate2DAtParameter(m_cursor->x(), myApp->localContext()).x2();
-  PoincareHelpers::ConvertFloatToText<double>(y, buffer + legendLength, PrintFloat::bufferSizeForFloatsWithPrecision(precision), precision);
+  PoincareHelpers::ConvertFloatToText<double>(y, buffer + legendLength, bufferSize - legendLength, precision);
   m_bannerView->bView()->setText(buffer);
   m_bannerView->reload();
 }

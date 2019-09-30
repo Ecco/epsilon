@@ -1,5 +1,11 @@
-NDK_PATH ?= /usr/local/android/ndk-bundle
+ANDROID_HOME ?= /usr/local/android
+NDK_PATH ?= $(ANDROID_HOME)/ndk-bundle
+
+ifeq ($(HOST),macos)
 NDK_HOST_TAG ?= darwin-x86_64
+else ifeq ($(HOST),linux)
+NDK_HOST_TAG ?= linux-x86_64
+endif
 
 NDK_TOOLCHAIN_PATH = $(NDK_PATH)/toolchains/llvm/prebuilt/$(NDK_HOST_TAG)/bin
 

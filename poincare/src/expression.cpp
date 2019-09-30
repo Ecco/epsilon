@@ -391,7 +391,11 @@ Evaluation<U> Expression::approximateToEvaluation(Context * context, Preferences
 }
 
 Expression Expression::defaultReplaceSymbolWithExpression(const SymbolAbstract & symbol, const Expression expression) {
-  for (int i = 0; i < numberOfChildren(); i++) {
+  /* In this case, replacing a symbol does not alter the number of children,
+   * since no other operation (e.g. reduction) is applied. */
+  const int nbChildren = numberOfChildren();
+  for (int i = 0; i < nbChildren; i++) {
+    assert(nbChildren == numberOfChildren());
     childAtIndex(i).replaceSymbolWithExpression(symbol, expression);
   }
   return *this;
@@ -413,18 +417,6 @@ int Expression::getPolynomialReducedCoefficients(const char * symbolName, Expres
     coefficients[i] = coefficients[i].reduce(context, complexFormat, angleUnit);
   }
   return degree;
-}
-
-Expression Expression::replaceUnknown(const Symbol & symbol, const Symbol & unknownSymbol) {
-  return node()->replaceUnknown(symbol, unknownSymbol);
-}
-
-Expression Expression::defaultReplaceUnknown(const Symbol & symbol, const Symbol & unknownSymbol) {
-  const int childrenCount = numberOfChildren();
-  for (int i = 0; i < childrenCount; i++) {
-    childAtIndex(i).replaceUnknown(symbol, unknownSymbol);
-  }
-  return *this;
 }
 
 /* Complex */

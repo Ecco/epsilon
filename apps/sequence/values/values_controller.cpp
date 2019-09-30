@@ -1,12 +1,16 @@
 #include "values_controller.h"
 #include <assert.h>
 #include <cmath>
+#include "../../shared/poincare_helpers.h"
 #include "../app.h"
+
+using namespace Poincare;
 
 namespace Sequence {
 
 ValuesController::ValuesController(Responder * parentResponder, InputEventHandlerDelegate * inputEventHandlerDelegate, ButtonRowController * header) :
   Shared::ValuesController(parentResponder, header),
+  m_selectableTableView(this),
   m_sequenceTitleCells{},
   m_floatCells{},
   m_abscissaTitleCell(),
@@ -27,7 +31,11 @@ ValuesController::ValuesController(Responder * parentResponder, InputEventHandle
   for (int i = 0; i < k_maxNumberOfSequences; i++) {
     m_sequenceTitleCells[i].setOrientation(Shared::FunctionTitleCell::Orientation::HorizontalIndicator);
   }
-  setupAbscissaCellsAndTitleCells(inputEventHandlerDelegate);
+  setupSelectableTableViewAndCells(inputEventHandlerDelegate);
+}
+
+KDCoordinate ValuesController::columnWidth(int i) {
+  return k_cellWidth;
 }
 
 void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, int j) {
@@ -63,10 +71,10 @@ bool ValuesController::setDataAtLocation(double floatBody, int columnIndex, int 
   return Shared::ValuesController::setDataAtLocation(std::round(floatBody), columnIndex, rowIndex);
 }
 
-double ValuesController::evaluationOfAbscissaAtColumn(double abscissa, int columnIndex) {
+void ValuesController::printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) {
   Shared::ExpiringPointer<Sequence> sequence = functionStore()->modelForRecord(recordAtColumn(columnIndex));
-  Poincare::Coordinate2D<double> xy = sequence->evaluateXYAtParameter(abscissa, textFieldDelegateApp()->localContext());
-  return xy.x2();
+  Coordinate2D<double> xy = sequence->evaluateXYAtParameter(abscissa, textFieldDelegateApp()->localContext());
+  Shared::PoincareHelpers::ConvertFloatToText<double>(xy.x2(), buffer, bufferSize, Preferences::LargeNumberOfSignificantDigits);
 }
 
 Shared::Interval * ValuesController::intervalAtColumn(int columnIndex) {

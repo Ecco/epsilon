@@ -1,6 +1,5 @@
 #include "values_controller.h"
 #include "function_app.h"
-#include "poincare_helpers.h"
 #include <poincare/preferences.h>
 #include <assert.h>
 
@@ -13,19 +12,19 @@ ValuesController::ValuesController(Responder * parentResponder, ButtonRowControl
   ButtonRowDelegate(header, nullptr),
   m_numberOfColumns(0),
   m_numberOfColumnsNeedUpdate(true),
-  m_selectableTableView(this),
   m_abscissaParameterController(this)
 {
-  m_selectableTableView.setVerticalCellOverlap(0);
-  m_selectableTableView.setMargins(k_margin, k_scrollBarMargin, k_scrollBarMargin, k_margin);
-  m_selectableTableView.setBackgroundColor(Palette::WallScreenDark);
 }
 
-void ValuesController::setupAbscissaCellsAndTitleCells(InputEventHandlerDelegate * inputEventHandlerDelegate) {
+void ValuesController::setupSelectableTableViewAndCells(InputEventHandlerDelegate * inputEventHandlerDelegate) {
+  selectableTableView()->setVerticalCellOverlap(0);
+  selectableTableView()->setMargins(k_margin, k_scrollBarMargin, k_scrollBarMargin, k_margin);
+  selectableTableView()->setBackgroundColor(Palette::WallScreenDark);
+
   int numberOfAbscissaCells = abscissaCellsCount();
   for (int i = 0; i < numberOfAbscissaCells; i++) {
     EvenOddEditableTextCell * c = abscissaCells(i);
-    c->setParentResponder(&m_selectableTableView);
+    c->setParentResponder(selectableTableView());
     c->editableTextCell()->textField()->setDelegates(inputEventHandlerDelegate, this);
     c->editableTextCell()->textField()->setFont(k_font);
   }
@@ -125,41 +124,17 @@ void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, in
   willDisplayCellAtLocationWithDisplayMode(cell, i, j, Preferences::sharedPreferences()->displayMode());
   // The cell is not a title cell and not editable
   if (typeAtLocation(i,j) == k_notEditableValueCellType) {
-    constexpr int precision = Preferences::LargeNumberOfSignificantDigits;
-    char buffer[PrintFloat::bufferSizeForFloatsWithPrecision(precision)];
+    constexpr int bufferSize = 2*PrintFloat::charSizeForFloatsWithPrecision(Preferences::LargeNumberOfSignificantDigits)+3;
+    char buffer[bufferSize]; // The largest buffer holds (-1.234567E-123;-1.234567E-123)
     // Special case: last row
     if (j == numberOfElementsInColumn(i) + 1) {
       buffer[0] = 0;
     } else {
       double x = intervalAtColumn(i)->element(j-1);
-      PoincareHelpers::ConvertFloatToText<double>(evaluationOfAbscissaAtColumn(x, i), buffer, cellBufferSize(i), precision);
+      printEvaluationOfAbscissaAtColumn(x, i, buffer, bufferSize);
     }
     static_cast<EvenOddBufferTextCell *>(cell)->setText(buffer);
   }
-}
-
-KDCoordinate ValuesController::columnWidth(int i) {
-  switch (i) {
-    case 0:
-      return k_abscissaCellWidth;
-    default:
-      return k_ordinateCellWidth;
-  }
-}
-
-KDCoordinate ValuesController::cumulatedWidthFromIndex(int i) {
-  if (i == 0) {
-    return 0;
-  } else {
-    return k_abscissaCellWidth + (i-1)*k_ordinateCellWidth;
-  }
-}
-
-int ValuesController::indexFromCumulatedWidth(KDCoordinate offsetX) {
-  if (offsetX <= k_abscissaCellWidth) {
-    return 0;
-  }
-  return (offsetX - k_abscissaCellWidth)/k_ordinateCellWidth+1;
 }
 
 HighlightCell * ValuesController::reusableCell(int index, int type) {

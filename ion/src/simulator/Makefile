@@ -1,15 +1,8 @@
-ion_src += $(addprefix ion/src/simulator/, \
-  init.cpp \
-)
-
-ion_src += $(addprefix ion/src/simulator/boot/, main.cpp)
-ion_src += $(addprefix ion/src/simulator/display/, fltklcd.cpp)
-ion_src += $(addprefix ion/src/simulator/keyboard/, fltkkbd.cpp)
-
+# TODO
 ion_src += $(addprefix ion/src/shared/, \
   crc32.cpp \
-  console_line.cpp \
-  console_stdio.cpp \
+  events.cpp \
+  events_keyboard.cpp \
   events_modifier.cpp \
   power.cpp \
   random.cpp \
@@ -24,5 +17,13 @@ ion_src += $(addprefix ion/src/shared/, \
   dummy/usb.cpp \
 )
 
-SFLAGS += `fltk-config --cflags`
-LDFLAGS += `fltk-config --ldflags`
+ion_src += $(addprefix ion/src/simulator/shared/, \
+  display.cpp \
+  events_keyboard_platform.cpp \
+  keyboard.cpp \
+  main.cpp \
+  layout.cpp \
+)
+
+include ion/src/simulator/$(TARGET)/Makefile
+include ion/src/simulator/external/Makefile

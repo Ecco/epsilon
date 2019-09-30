@@ -30,17 +30,8 @@ $(addprefix $$(BUILD_DIR)/,$(strip $(2))): $(strip $(3)) | $$$$(@D)/.
 	$(Q) $(4)
 endef
 
-# Define rules for targets
-# Those can be built directly with make executable.extension as a shortcut.
-
-define rules_for_targets
-.PHONY: $(1)$(2)
-$(1)$(2): $$(BUILD_DIR)/$(1)$(2)
-endef
-
 .PHONY: info
 info:
-	@echo "========= Building Flags ========="
 	@echo "EPSILON_VERSION = $(EPSILON_VERSION)"
 	@echo "EPSILON_APPS = $(EPSILON_APPS)"
 	@echo "EPSILON_I18N = $(EPSILON_I18N)"
@@ -52,54 +43,28 @@ info:
 	@echo "ION_STORAGE_LOG" = $(ION_STORAGE_LOG)
 	@echo "POINCARE_TREE_LOG" = $(POINCARE_TREE_LOG)
 	@echo "POINCARE_TESTS_PRINT_EXPRESSIONS" = $(POINCARE_TESTS_PRINT_EXPRESSIONS)
-	@echo "=================================="
+
+.PHONY: help
+help:
+	@echo "Device targets"
+	@echo "  make epsilon_flash"
+	@echo "  make epsilon.dfu"
+	@echo "  make epsilon.on-boarding.dfu"
+	@echo "  make epsilon.on-boarding.update.dfu"
+	@echo "  make epsilon.on-boarding.beta.dfu"
+	@echo "  make flasher.light.bin"
+	@echo "  make flasher.verbose.dfu"
+	@echo "  make bench.ram.bin"
+	@echo "  make bench.flash.bin"
+	@echo "  make binpack"
 	@echo ""
-	@echo "============= Targets ============"
-	@echo "--------- Cross-platforms --------"
-	@echo "epsilon"
-	@echo "epsilon.on-boarding"
-	@echo "epsilon.on-boarding.update"
-	@echo "epsilon.on-boarding.beta"
-	@echo "test"
-	@echo "PHONY:"
-	@echo "  clean"
-	@echo "  clean_for_apps_selection (use this 'light' clean before changing the flag EPSILON_APPS)"
-	@echo "----------------------------------"
-	@echo ""
-	@echo "------------- Device -------------"
-	@echo "flasher.light"
-	@echo "flasher.verbose"
-	@echo "bench.ram"
-	@echo "bench.flash"
-	@echo "PHONY:"
-	@echo "  binpack"
-	@echo "  %_two_binaries"
-	@echo "  %_size"
-	@echo "  %_run"
-	@echo "  %_memory_map"
-	@echo "  %_flash"
-	@echo "  clean_for_apps_selection (use this 'light' clean before changing the flag EPSILON_APPS)"
-	@echo ".............N0110................"
-	@echo "test.external_flash.write"
-	@echo "test.external_flash.read"
-	@echo ".................................."
-	@echo "----------------------------------"
-	@echo ""
-	@echo "----------- emscripten -----------"
-	@echo "simulator.zip"
-	@echo "----------------------------------"
-	@echo ""
-	@echo "----------- blackbox -------------"
-	@echo "compare"
-	@echo "PHONY:"
-	@echo "  tests/%.run"
-	@echo "  tests/%.render"
-	@echo "  integration_tests"
-	@echo "  epsilon_fuzz"
-	@echo "  compare_fuzz"
-	@echo "----------------------------------"
-	@echo ""
-	@echo "=================================="
+	@echo "Simulator targets"
+	@echo "  make PLATFORM=simulator"
+	@echo "  make PLATFORM=simulator TARGET=android"
+	@echo "  make PLATFORM=simulator TARGET=ios"
+	@echo "  make PLATFORM=simulator TARGET=macos"
+	@echo "  make PLATFORM=simulator TARGET=web"
+	@echo "  make PLATFORM=simulator TARGET=windows"
 
 # Since we're building out-of-tree, we need to make sure the output directories
 # are created, otherwise the receipes will fail (e.g. gcc will fail to create
@@ -147,88 +112,20 @@ all_objs = $(call object_for,$(all_src))
 # but allows correct yet optimal incremental builds.
 -include $(all_objs:.o=.d)
 
-executables = epsilon epsilon.on-boarding epsilon.on-boarding.update epsilon.on-boarding.beta test
-
-extensions = .$(EXE)
-
-#define platform generic targets
-all_epsilon_common_src = $(ion_src) $(liba_src) $(kandinsky_src) $(epsilon_src) $(app_src) $(escher_src) $(libaxx_src) $(poincare_src) $(python_src) $(ion_device_dfu_relocated_src)
-all_epsilon_default_src = $(all_epsilon_common_src) $(apps_launch_default_src) $(apps_prompt_none_src)
-
-$(BUILD_DIR)/epsilon.$(EXE): $(call object_for,$(all_epsilon_default_src))
-$(BUILD_DIR)/epsilon.on-boarding.$(EXE): $(call object_for,$(all_epsilon_common_src) $(apps_launch_on_boarding_src) $(apps_prompt_none_src))
-$(BUILD_DIR)/epsilon.on-boarding.update.$(EXE): $(call object_for,$(all_epsilon_common_src) $(apps_launch_on_boarding_src) $(apps_prompt_update_src))
-$(BUILD_DIR)/epsilon.on-boarding.beta.$(EXE): $(call object_for,$(all_epsilon_common_src) $(apps_launch_on_boarding_src) $(apps_prompt_beta_src))
-
-$(BUILD_DIR)/test.$(EXE): $(BUILD_DIR)/quiz/src/tests_symbols.o $(call object_for,$(ion_src) $(liba_src) $(kandinsky_src) $(escher_src) $(libaxx_src) $(poincare_src) $(python_src) $(ion_device_dfu_relocated_src) $(tests_src) $(runner_src) $(app_calculation_test_src) $(app_probability_test_src) $(app_regression_test_src) $(app_sequence_test_src) $(app_shared_test_src) $(app_statistics_test_src) $(app_solver_test_src))
-
-# Load platform-specific targets
-# We include them before the standard ones to give them precedence.
--include build/targets.$(PLATFORM).mak
+# Define main and shortcut targets
+include build/targets.mak
 
 # Fill in the default recipe
 DEFAULT ?= $(BUILD_DIR)/epsilon.$(EXE)
 default: $(DEFAULT)
 
-$(foreach extension,$(extensions),$(foreach executable,$(executables),$(eval $(call rules_for_targets,$(executable),$(extension)))))
-
-# Define standard compilation rules
-
-$(eval $(call rule_for, \
-  AS, %.o, %.s, \
-  $$(CC) $$(SFLAGS) -c $$< -o $$@ \
-))
-
-$(eval $(call rule_for, \
-  CC, %.o, %.c, \
-  $$(CC) $$(SFLAGS) $$(CFLAGS) -c $$< -o $$@, \
-  with_local_version \
-))
-
-$(eval $(call rule_for, \
-  CXX, %.o, %.cpp, \
-  $$(CXX) $$(SFLAGS) $$(CXXFLAGS) -c $$< -o $$@, \
-  with_local_version \
-))
-
-$(eval $(call rule_for, \
-  OCC, %.o, %.m, \
-  $$(CC) $$(SFLAGS) $$(CFLAGS) -c $$< -o $$@ \
-))
-
-ifeq ($(OS),Windows_NT)
-# Work around command-line length limit
-# On Msys2 the max command line is 32 000 characters. Our standard LD command
-# can be longer than that because we have quite a lot of object files. To work
-# around this issue, we write the object list in a "target.objs" file, and tell
-# the linker to read its arguments from this file.
-$(eval $(call rule_for, \
-  LD, %.$$(EXE), , \
-  echo $$^ > $$@.objs && $$(LD) @$$@.objs $$(LDFLAGS) -o $$@ && rm $$@.objs \
-))
-else
-$(eval $(call rule_for, \
-  LD, %.$$(EXE), , \
-  $$(LD) $$^ $$(LDFLAGS) -o $$@ \
-))
-endif
-
-.PHONY: workshop_python_emulator
-workshop_python_emulator:
-	make  PLATFORM=emscripten clean_for_apps_selection
-	make -j8 PLATFORM=emscripten EPSILON_APPS=code
-	make PLATFORM=emscripten clean_for_apps_selection
+# Load standard build rules
+include build/rules.mk
 
 .PHONY: clean
 clean:
 	@echo "CLEAN"
 	$(Q) rm -rf $(BUILD_DIR)
-
-.PHONY: clean_for_apps_selection
-clean_for_apps_selection:
-	@echo "CLEAN BEFORE CHANGING EPSILON_APPS"
-	$(Q) rm -f $(BUILD_DIR)/apps/apps_container_storage.o
-	$(Q) rm -f $(BUILD_DIR)/apps/i18n.*
 
 .PHONY: cowsay_%
 cowsay_%:

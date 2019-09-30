@@ -12,6 +12,7 @@ ESCHER_LOG_EVENTS_BINARY ?= 0
 
 include build/defaults.mak
 include build/platform.$(PLATFORM).mak
+
 ifndef USE_LIBA
   $(error platform.mak should define USE_LIBA)
 endif

@@ -14,6 +14,7 @@ public:
   Button * buttonAtIndex(int index, ButtonRowController::Position position) const override {
     return const_cast<Button *>(&m_setIntervalButton);
   }
+  KDCoordinate columnWidth(int i) override;
   void willDisplayCellAtLocation(HighlightCell * cell, int i, int j) override;
   I18n::Message emptyMessage() override;
   IntervalParameterController * intervalParameterController() override {
@@ -22,7 +23,7 @@ public:
 private:
   void setStartEndMessages(Shared::IntervalParameterController * controller, int column) override;
   bool setDataAtLocation(double floatBody, int columnIndex, int rowIndex) override;
-  double evaluationOfAbscissaAtColumn(double abscissa, int columnIndex) override;
+  void printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) override;
   Shared::Interval * intervalAtColumn(int columnIndex) override;
   I18n::Message valuesParameterMessageAtColumn(int columnIndex) const override;
   int maxNumberOfCells() override { return k_maxNumberOfCells; }
@@ -32,6 +33,7 @@ private:
 
   SequenceStore * functionStore() const override { return static_cast<SequenceStore *>(Shared::ValuesController::functionStore()); }
   ViewController * functionParameterController() override;
+  SelectableTableView * selectableTableView() override { return &m_selectableTableView; }
   int abscissaCellsCount() const override { return k_maxNumberOfRows; }
   EvenOddEditableTextCell * abscissaCells(int j) override {
     assert (j >= 0 && j < k_maxNumberOfRows);
@@ -50,6 +52,7 @@ private:
     assert(j >= 0 && j < k_maxNumberOfCells);
     return &m_floatCells[j];
   }
+  SelectableTableView m_selectableTableView;
   SequenceTitleCell m_sequenceTitleCells[k_maxNumberOfSequences];
   EvenOddBufferTextCell m_floatCells[k_maxNumberOfCells];
   EvenOddMessageTextCell m_abscissaTitleCell;

@@ -24,9 +24,6 @@ public:
   virtual IntervalParameterController * intervalParameterController() = 0;
   int numberOfButtons(ButtonRowController::Position) const override;
   virtual void willDisplayCellAtLocation(HighlightCell * cell, int i, int j) override;
-  KDCoordinate columnWidth(int i) override;
-  KDCoordinate cumulatedWidthFromIndex(int i) override;
-  int indexFromCumulatedWidth(KDCoordinate offsetX) override;
   HighlightCell * reusableCell(int index, int type) override;
   int reusableCellCount(int type) override;
   int typeAtLocation(int i, int j) override;
@@ -34,10 +31,9 @@ public:
   Responder * defaultController() override;
   void viewWillAppear() override;
   void viewDidDisappear() override;
-  static constexpr KDCoordinate k_abscissaCellWidth = 100;
-  static constexpr KDCoordinate k_ordinateCellWidth = 100;
 
 protected:
+  static constexpr KDCoordinate k_cellWidth = (Poincare::PrintFloat::glyphLengthForFloatWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits)) * 7 + 2*Metric::CellMargin; // KDFont::SmallFont->glyphSize().width() = 7
   static constexpr int k_abscissaTitleCellType = 0;
   static constexpr int k_functionTitleCellType = 1;
   static constexpr int k_editableValueCellType = 2;
@@ -45,23 +41,21 @@ protected:
   constexpr static int k_maxNumberOfRows = 10;
 
   static constexpr const KDFont * k_font = KDFont::SmallFont;
-  void setupAbscissaCellsAndTitleCells(InputEventHandlerDelegate * inputEventHandlerDelegate);
+  void setupSelectableTableViewAndCells(InputEventHandlerDelegate * inputEventHandlerDelegate);
   StackViewController * stackController() const;
   bool setDataAtLocation(double floatBody, int columnIndex, int rowIndex) override;
   virtual void updateNumberOfColumns() const;
   virtual FunctionStore * functionStore() const;
   virtual Ion::Storage::Record recordAtColumn(int i);
   int numberOfElementsInColumn(int columnIndex) const override;
-  SelectableTableView * selectableTableView() override { return &m_selectableTableView; }
   mutable int m_numberOfColumns;
   mutable bool m_numberOfColumnsNeedUpdate;
-  SelectableTableView m_selectableTableView;
 private:
   virtual void setStartEndMessages(Shared::IntervalParameterController * controller, int column) = 0;
   Responder * tabController() const override;
   bool cellAtLocationIsEditable(int columnIndex, int rowIndex) override;
   double dataAtLocation(int columnIndex, int rowIndex) override;
-  virtual double evaluationOfAbscissaAtColumn(double abscissa, int columnIndex) = 0;
+  virtual void printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) = 0;
   virtual Interval * intervalAtColumn(int columnIndex) = 0;
   virtual I18n::Message valuesParameterMessageAtColumn(int columnIndex) const = 0;
   int maxNumberOfElements() const override {

@@ -22,6 +22,14 @@ SFLAGS += -Wall
 # Flags - Header dependency tracking
 SFLAGS += -MD -MP
 
+# Building directory
+ifeq ($(DEBUG),1)
+  BUILD_TYPE = debug
+else
+  BUILD_TYPE = release
+endif
+BUILD_DIR = output/$(BUILD_TYPE)/$(PLATFORM)
+
 # Define "Q" as an arobase by default to silence-out every command run by make.
 # If V=1 is supplied on the make command line, undefine Q so that every command
 # is echoed out.
@@ -34,10 +42,16 @@ ifeq ("$(origin V)", "command line")
   endif
 endif
 
-# Building directory
-ifeq ($(DEBUG),1)
-  MODE = debug
+# Host detection
+ifeq ($(OS),Windows_NT)
+HOST = windows
 else
-  MODE = release
+uname_s := $(shell uname -s)
+ifeq ($(uname_s),Darwin)
+HOST = macos
+else ifeq ($(uname_s),Linux)
+HOST = linux
+else
+HOST = unknown
 endif
-BUILD_DIR = output/$(PLATFORM)/$(MODE)
+endif
