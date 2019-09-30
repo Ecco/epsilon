@@ -2,11 +2,10 @@ name: Continuous integration
 on: [push]
 
 jobs:
-  build-emscripten:
+  build-msys2:
     runs-on: windows-latest
     steps:
       - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
-      - run: dir
       - run: bash -l -i -c "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng"
       - run: bash -l -i -c "cd $OLDPWD && make PLATFORM=simulator"
