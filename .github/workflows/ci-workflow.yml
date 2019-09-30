@@ -7,7 +7,18 @@ jobs:
     steps:
       - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
-      - run: set
-      - run: msys2do env
       - run: msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng
-      - run: msys2do make PLATFORM=simulator
+      - run: msys2do make -j2 PLATFORM=simulator
+      - uses: actions/upload-artifact@master
+        with:
+          name: epsilon-win64.exe
+          path: output/release/simulator/windows/epsilon.exe
+  build-emscripten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ecco/setup-emscripten@master
+      - run: source emsdk/emsdk_env.sh && make -j2 PLATFORM=simulator TARGET=web
+      - uses: actions/upload-artifact@master
+        with:
+          name: epsilon-web.zip
+          path: output/release/simulator/web/simulator.zip
