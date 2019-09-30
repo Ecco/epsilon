@@ -8,5 +8,6 @@ jobs:
       - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
       - run: dir
-      - run: msys2.exe --help
-      - run: make PLATFORM=emscripten
+      - run: bash -l -c "uptime"
+      - run: bash -l -c "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-fltk git make bison mingw-w64-x86_64-python2"
+      - run: bash -l -c "make PLATFORM=emscripten"
