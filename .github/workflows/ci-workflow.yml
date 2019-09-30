@@ -5,10 +5,12 @@ jobs:
   build-msys2:
     runs-on: windows-latest
     steps:
+      - uses: ecco/setup-msys2@master
       - uses: actions/checkout@v1
       - run: env
       - run: which bash
       - run: which env
       - run: bash -l -i -c "env"
-      - run: bash -l -i -c "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config mingw-w64-x86_64-make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng"
-      - run: env MSYSTEM=MINGW64 bash -l -c "cd $OLDPWD && make PLATFORM=simulator"
+      - run: "D:\\a\\_temp\\plifplafplouf\\usr\\bin\\bash" -l -i -c "env"
+      - run: "D:\\a\\_temp\\plifplafplouf\\usr\\bin\\bash" -l -i -c "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config mingw-w64-x86_64-make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng"
+      - run: "D:\\a\\_temp\\plifplafplouf\\usr\\bin\\bash" -l -i -c "cd $OLDPWD && make PLATFORM=simulator"
